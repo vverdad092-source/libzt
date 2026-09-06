@@ -17,28 +17,16 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Build Android Package
+    - name: Compile directly via Gradle
       run: |
-        chmod +x ./build.sh
-        # Intentamos la compilación estándar
-        ./build.sh android-aar release || true
-        
-        # Si falló la ruta anterior, compilamos directamente con Gradle en la ruta de Android
-        if [ -d "pkg/android" ]; then
-          cd pkg/android
-          ./gradlew assembleRelease
-        fi
+        cd pkg/android
+        chmod +x gradlew
+        ./gradlew :app:assembleRelease
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
-
-    - name: List all generated files for debugging
-      run: find . -name "*.aar"
 
     - name: Upload AAR Artifact
       uses: actions/upload-artifact@v4
       with:
         name: libzt-release-aar
-        path: |
-          **/*.aar
-          pkg/android/app/build/outputs/aar/*.aar
-          dist/**/*.aar
+        path: pkg/android/app/build/outputs/aar/*.aar
