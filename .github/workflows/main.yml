@@ -17,15 +17,15 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Build AAR
+    - name: Compile Explicitly
       run: |
-        chmod +x ./build.sh
-        ./build.sh android-aar release
-      env:
-        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        export ANDROID_HOME=$ANDROID_SDK_ROOT
+        cd pkg/android
+        chmod +x gradlew
+        ./gradlew assembleRelease
 
     - name: Upload AAR Artifact
       uses: actions/upload-artifact@v4
       with:
         name: libzt-release-aar
-        path: ${{ github.workspace }}/pkg/android/app/build/outputs/aar/*.aar
+        path: pkg/android/app/build/outputs/aar/*.aar
