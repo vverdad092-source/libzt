@@ -17,11 +17,14 @@ jobs:
     - name: Build AAR
       run: bash ./build.sh android-aar release
 
-    - name: List build output (Debug)
-      run: ls -R dist/ || true
+    - name: Find all AAR files
+      run: find . -name "*.aar"
 
     - name: Upload AAR Artifact
       uses: actions/upload-artifact@v4
       with:
         name: libzt-release-aar
-        path: dist/**
+        path: |
+          dist/**
+          **/build/outputs/aar/*.aar
+          **/*.aar
