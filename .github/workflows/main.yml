@@ -17,15 +17,30 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Compile Explicitly
-      run: |
-        export ANDROID_HOME=$ANDROID_SDK_ROOT
-        cd pkg/android
-        chmod +x gradlew
-        ./gradlew assembleRelease
+    - name: Install Native Build Tools
+      run: sudo apt-get update && sudo apt-get install -y make cmake clang ninja-build
 
+    - name: Compile libzt and Build AAR
+      run: |
+        export ANDROID_HOME=${{ env.ANDROID_SDK_ROOT }}
+        
+        # Localizar la versión más reciente del NDK preinstalada en el servidor
+        export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk | sort -V | tail -n 1)
+        echo "Using NDK at: $ANDROID_NDK_HOME"
+        
+        # Ejecutar script oficial
+        chmod +x ./build.sh
+        ./build.sh android-aar release || echo "build.sh script ended, proceeding to Gradle fallback..."
+        
+        # Compilación explícita con Gradle inyectando el NDK
+        cd pkg/android
+        echo "ndk.dir=$ANDROID_NDK_HOME" > local.properties
+        chmod +x gradlew
+        ./gradlew assembleRelease --info --stacktrace
+        
     - name: Upload AAR Artifact
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: libzt-release-aar
-        path: pkg/android/app/build/outputs/aar/*.aar
+        path: '**/*.aar'
