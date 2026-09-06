@@ -15,10 +15,16 @@ jobs:
         java-version: '17'
 
     - name: Build AAR
-      run: bash ./build.sh android-aar release
+      run: |
+        chmod +x ./build.sh
+        bash -x ./build.sh android-aar release
 
-    - name: Find all AAR files
-      run: find . -name "*.aar"
+    - name: List directory contents
+      if: always()
+      run: |
+        pwd
+        ls -la
+        find pkg -maxdepth 4 || true
 
     - name: Upload AAR Artifact
       uses: actions/upload-artifact@v4
