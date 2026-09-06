@@ -13,4 +13,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: libzt-release-aar
-        path: dist/
+        path: build/outputs/aar/
