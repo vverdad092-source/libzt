@@ -2,7 +2,7 @@ name: Build Android AAR
 on: [push, workflow_dispatch]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # Usamos 22.04 porque es más estable para librerías nativas antiguas/complejas
     steps:
     - uses: actions/checkout@v4
       with:
@@ -17,27 +17,29 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install Native Build Tools
-      run: sudo apt-get update && sudo apt-get install -y make cmake clang ninja-build
+    - name: Install Critical Native Dependencies (SWIG & Rust)
+      run: |
+        sudo apt-get update
+        # SWIG es OBLIGATORIO para compilar los puentes de Java (JNI) en libzt
+        sudo apt-get install -y make cmake clang ninja-build swig
+        
+        # ZeroTier requiere Rust y los targets de Android para su motor de red
+        rustup default stable
+        rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 
-    - name: Compile libzt and Build AAR
+    - name: Build AAR Package
       run: |
         export ANDROID_HOME=${{ env.ANDROID_SDK_ROOT }}
-        
-        # Localizar la versión más reciente del NDK preinstalada en el servidor
         export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk | sort -V | tail -n 1)
-        echo "Using NDK at: $ANDROID_NDK_HOME"
         
-        # Ejecutar script oficial
+        # El script de libzt a menudo busca esta variable específica
+        export NDK_HOME=$ANDROID_NDK_HOME 
+        
         chmod +x ./build.sh
-        ./build.sh android-aar release || echo "build.sh script ended, proceeding to Gradle fallback..."
         
-        # Compilación explícita con Gradle inyectando el NDK
-        cd pkg/android
-        echo "ndk.dir=$ANDROID_NDK_HOME" > local.properties
-        chmod +x gradlew
-        ./gradlew assembleRelease --info --stacktrace
-        
+        # Ejecutar la compilación nativa
+        ./build.sh android-aar release
+
     - name: Upload AAR Artifact
       uses: actions/upload-artifact@v4
       if: always()
