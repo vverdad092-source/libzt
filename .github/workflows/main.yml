@@ -17,20 +17,12 @@ jobs:
     - name: Build AAR
       run: |
         chmod +x ./build.sh
-        bash -x ./build.sh android-aar release
-
-    - name: List directory contents
-      if: always()
-      run: |
-        pwd
-        ls -la
-        find pkg -maxdepth 4 || true
+        ./build.sh android-aar release
 
     - name: Upload AAR Artifact
       uses: actions/upload-artifact@v4
       with:
         name: libzt-release-aar
         path: |
-          dist/**
-          **/build/outputs/aar/*.aar
-          **/*.aar
+          pkg/android/app/build/outputs/aar/*.aar
+          dist/**/*.aar
