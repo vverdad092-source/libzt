@@ -17,16 +17,20 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Compile directly via Gradle
+    - name: Force Build
       run: |
-        cd pkg/android
-        chmod +x gradlew
-        ./gradlew :app:assembleRelease
-      env:
-        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        export ANDROID_HOME=$ANDROID_SDK_ROOT
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+        
+        # Ejecutar script oficial de libzt para Android
+        bash ./build.sh android-aar release
+        
+        # Si el script no creó el archivo en dist, buscarlo y copiarlo forzadamente
+        mkdir -p dist
+        find pkg/android -name "*.aar" -exec cp {} dist/ \;
 
     - name: Upload AAR Artifact
       uses: actions/upload-artifact@v4
       with:
         name: libzt-release-aar
-        path: pkg/android/app/build/outputs/aar/*.aar
+        path: dist/*.aar
