@@ -1,16 +1,11 @@
-name: Build Android AAR
-on: [push, workflow_dispatch]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-    - name: Build AAR
+- name: Build AAR
       run: bash ./build.sh android-aar release
+    - name: Find and Copy AAR
+      run: |
+        mkdir -p dist
+        find . -name "*.aar" -exec cp {} dist/ \;
     - name: Upload AAR
       uses: actions/upload-artifact@v4
       with:
         name: libzt-release-aar
-        path: build/outputs/aar/
+        path: dist/
